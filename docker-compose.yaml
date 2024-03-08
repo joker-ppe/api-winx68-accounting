@@ -1,0 +1,208 @@
+version: '3.9'
+
+services:
+  jk-database:
+    image: postgres:16.0
+    restart: always
+    volumes:
+      - jk_data:/var/lib/postgresql/data
+    container_name: jk-database
+    ports:
+      - 5432:5432 #{port in host(myPC)} : {port in Container}
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mud4pmRt6jLm
+      POSTGRES_DB: accounting_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jk-nestjs-network
+
+  jk-api-cron:
+    build: .
+    container_name: jk-api-cron
+    restart: always
+    environment:
+      - INSTANCE_ROLE=cron
+      - APP_PORT=3003
+    ports:
+      - 3003:3003
+    depends_on:
+      jk-database:
+        condition: service_healthy
+    networks:
+      - jk-nestjs-network
+
+  jk-api-1:
+    # image: voixmomotalk/nestjs-thesis-api:1.0.0
+    build: .
+    container_name: jk-api-1
+    restart: always
+    environment:
+      - INSTANCE_ROLE=api
+      - APP_PORT=3004
+    ports:
+      - 3004:3004
+    depends_on:
+      jk-database:
+        condition: service_healthy
+    networks:
+      - jk-nestjs-network
+
+  jk-api-2:
+    build: .
+    container_name: jk-api-2
+    restart: always
+    environment:
+      - INSTANCE_ROLE=api
+      - APP_PORT=3005
+    ports:
+      - 3005:3005
+    depends_on:
+      jk-database:
+        condition: service_healthy
+    networks:
+      - jk-nestjs-network
+
+  jk-api-3:
+    build: .
+    container_name: jk-api-3
+    restart: always
+    environment:
+      - INSTANCE_ROLE=api
+      - APP_PORT=3006
+    ports:
+      - 3006:3006
+    depends_on:
+      jk-database:
+        condition: service_healthy
+    networks:
+      - jk-nestjs-network
+
+  jk-api-4:
+    build: .
+    container_name: jk-api-4
+    restart: always
+    environment:
+      - INSTANCE_ROLE=api
+      - APP_PORT=3007
+    ports:
+      - 3007:3007
+    depends_on:
+      jk-database:
+        condition: service_healthy
+    networks:
+      - jk-nestjs-network
+
+  jk-api-5:
+    build: .
+    container_name: jk-api-5
+    restart: always
+    environment:
+      - INSTANCE_ROLE=api
+      - APP_PORT=3008
+    ports:
+      - 3008:3008
+    depends_on:
+      jk-database:
+        condition: service_healthy
+    networks:
+      - jk-nestjs-network
+
+
+  nginx:
+    # build: ./nginx
+    image: nginx:latest
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    container_name: jk-nginx
+    depends_on:
+      - jk-api-cron
+      - jk-api-1
+      - jk-api-2
+      - jk-api-3
+      - jk-api-4
+      - jk-api-5
+    networks:
+      - jk-nestjs-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prom_data:/prometheus
+    networks:
+      - jk-nestjs-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=joker
+      - GF_SECURITY_ADMIN_PASSWORD=Joker@123
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+    networks:
+      - jk-nestjs-network
+
+  # source https://github.com/nginxinc/nginx-prometheus-exporter
+  nginx-prometheus-exporter:
+    image: nginx/nginx-prometheus-exporter
+    container_name: prometheus-nginx-exporter
+    restart: always
+    command:
+      - --nginx.scrape-uri=http://nginx/stub_status
+    expose:
+      - 9113
+    networks:
+      - jk-nestjs-network
+    depends_on:
+      - prometheus
+
+  # source https://github.com/prometheus/node_exporter
+  # https://github.com/vegasbrianc/prometheus/
+  prometheus-node-exporter:
+    image: prom/node-exporter
+    container_name: prometheus-node-exporter
+    restart: always
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    networks:
+      - jk-nestjs-network
+    privileged: true
+    depends_on:
+      - prometheus
+    expose:
+      - 9100
+
+
+networks:
+  jk-nestjs-network:
+    driver: bridge
+volumes:
+  jk_data:
+  prom_data:
