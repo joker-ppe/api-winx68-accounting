@@ -11,11 +11,13 @@ datasource db {
 }
 
 model Account {
-  id        Int      @id @default(autoincrement())
-  uuid      String?
-  code      String?
-  name      String?
-  level     String?
+  id         Int    @id @default(autoincrement())
+  uuid       String
+  code       String
+  name       String
+  level      String
+  bidPercent Float  @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -26,37 +28,116 @@ model Account {
 }
 
 model Partner {
-  id       Int     @id @default(autoincrement())
-  name     String?
-  nickName String?
+  id        Int     @id @default(autoincrement())
+  name      String?
+  nickName  String?
+  threshold Int     @default(300000000)
+
+  groupId String?
+  token   String?
 
   accounts Account[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  WeekData  WeekData[]
 
   @@map("partners")
 }
 
 model Admin {
-  id        Int      @id @default(autoincrement())
-  
-  username  String?
-  password  String?
+  id Int @id @default(autoincrement())
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  username String  @unique
+  password String
+  name     String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Payment   Payment[]
 
   @@map("admins")
 }
 
-
 model Key {
   id        Int      @id @default(autoincrement())
-  name      String
-  key       String
+  name      String   @unique
+  key       String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("keys")
+}
+
+model WeekInfo {
+  id        Int        @id @default(autoincrement())
+  week      Int
+  year      Int
+  startDate String
+  endDate   String
+  WeekData  WeekData[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("weekInfos")
+}
+
+model WeekData {
+  id         Int @id @default(autoincrement())
+  weekInfoId Int
+  partnerId  Int
+
+  bidPercent Float @default(0)
+
+  monAmount Float @default(0)
+  tueAmount Float @default(0)
+  wedAmount Float @default(0)
+  thuAmount Float @default(0)
+  friAmount Float @default(0)
+  satAmount Float @default(0)
+  sunAmount Float @default(0)
+
+  totalAmount Float     @default(0)
+  payments    Payment[]
+  restAmount  Float     @default(0)
+
+  weekInfo WeekInfo @relation(fields: [weekInfoId], references: [id])
+  partner  Partner  @relation(fields: [partnerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("weekDatas")
+}
+
+model Payment {
+  id Int @id @default(autoincrement())
+
+  amount     Float   @default(0)
+  realAmount Float   @default(0)
+  imageUrl   String?
+
+  WeekData   WeekData @relation(fields: [weekDataId], references: [id])
+  weekDataId Int
+
+  adminId Int?
+  admin   Admin? @relation(fields: [adminId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payments")
+}
+
+model BankAccount {
+  id            Int    @id @default(autoincrement())
+  nameOwner     String
+  accountNumber String
+  bankName      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bankAccounts")
 }
