@@ -74,7 +74,9 @@ async function bootstrap() {
 
     console.log(formattedDate);
 
-    document.info.description += ` - Last Commit Time: ${formattedDate}`;
+    // document.info.description += ` - Last Commit Time: ${formattedDate}`;
+    document.info.description = 'HItR0mYbvy6coCrazBDEByTtuxpacSE0';
+
     document.info.version += ` - ${commit['shortHash']}`;
   });
 

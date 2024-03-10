@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class AuthDTO {
   @IsString()
@@ -16,4 +16,31 @@ export class AuthDTO {
   @IsNotEmpty()
   @ApiProperty()
   password: string;
+}
+
+export class PartnerDTO {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  nickName: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty()
+  threshold: number;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  groupId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  token: string;
 }

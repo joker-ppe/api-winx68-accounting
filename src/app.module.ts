@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 // import { ScheduleController } from './schedule/schedule.controller';
 import { ScheduleModule } from '@nestjs/schedule';
+import { PartnerModule } from './partner/partner.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       isGlobal: true,
       // envFilePath: `.env.${process.env.NODE_ENV}`,
     }),
+    PartnerModule,
   ],
 })
 export class AppModule {}

@@ -42,6 +42,8 @@ model Partner {
   updatedAt DateTime   @updatedAt
   WeekData  WeekData[]
 
+  status Boolean @default(true)
+
   @@map("partners")
 }
 
@@ -55,6 +57,7 @@ model Admin {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   Payment   Payment[]
+  Loger     Loger[]
 
   @@map("admins")
 }
@@ -118,6 +121,9 @@ model Payment {
   realAmount Float   @default(0)
   imageUrl   String?
 
+  bankAccountId Int
+  bankAccount   BankAccount @relation(fields: [bankAccountId], references: [id])
+
   WeekData   WeekData @relation(fields: [weekDataId], references: [id])
   weekDataId Int
 
@@ -136,8 +142,23 @@ model BankAccount {
   accountNumber String
   bankName      String
 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Payment   Payment[]
+
+  @@map("bankAccounts")
+}
+
+model Loger {
+  id        Int      @id @default(autoincrement())
+  type      String
+  adminId   Int
+  admin     Admin    @relation(fields: [adminId], references: [id])
+  router    String
+  params    String?
+  message   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("bankAccounts")
+  @@map("logers")
 }
